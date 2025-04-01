@@ -51,13 +51,35 @@
             alert(`🚀 Вы летите с ${currentPlanet} на новую планету!`);
         }
 
-        // Отправляем данные боту при закрытии игры
-        Telegram.WebApp.onEvent('viewportChanged', () => {
-        Telegram.WebApp.sendData(JSON.stringify({ 
+        // Проверяем, что WebApp инициализирован
+if (window.Telegram && Telegram.WebApp) {
+    // Данные, которые будем отправлять боту
+    const gameData = {
         energy: energy,
-        planet: currentPlanet 
-        }));
-        });
+        planet: currentPlanet,
+        userId: Telegram.WebApp.initDataUnsafe.user?.id || "unknown"
+    };
+
+    // 1. Отправляем данные при закрытии игры
+    Telegram.WebApp.onEvent('viewportChanged', () => {
+        if (Telegram.WebApp.isExpanded) {
+            Telegram.WebApp.sendData(JSON.stringify(gameData));
+        }
+    });
+
+    // 2. Кнопка "Сохранить и выйти"
+    document.getElementById('save-btn').addEventListener('click', () => {
+        Telegram.WebApp.sendData(JSON.stringify(gameData));
+        Telegram.WebApp.close();
+    });
+
+    // 3. Загружаем данные из бота (если есть)
+    if (Telegram.WebApp.initDataUnsafe.start_param) {
+        const savedData = JSON.parse(Telegram.WebApp.initDataUnsafe.start_param);
+        energy = savedData.energy || 100;
+        document.getElementById('energy').innerText = energy;
+    }
+}
     </script>
 </body>
 </html>
