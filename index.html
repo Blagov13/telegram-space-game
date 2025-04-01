@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>CosmoRise Game</title>
+    <meta charset="UTF-8">
+    <!-- Подключаем стиль Telegram -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+            background-color: #0e0e1a;
+            color: white;
+            padding: 20px;
+        }
+        button {
+            background: #4a6bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            margin: 10px;
+        }
+        #energy {
+            font-weight: bold;
+            color: #4affa1;
+        }
+    </style>
+</head>
+<body>
+    <h1>🌌 CosmoRise</h1>
+    <p>Ты на планете: <span id="planet">Земля</span></p>
+    <p>Энергия: <span id="energy">100</span> ⚡</p>
+    
+    <button onclick="mineEnergy()">Добыть энергию</button>
+    <button onclick="travel()">Полетели!</button>
+
+    <script>
+        // Здесь будет логика игры
+        let energy = 100;
+        let currentPlanet = "Земля";
+
+        function mineEnergy() {
+            energy += 10;
+            document.getElementById("energy").innerText = energy;
+        }
+
+        function travel() {
+            alert(`🚀 Вы летите с ${currentPlanet} на новую планету!`);
+        }
+    </script>
+</body>
+</html>
