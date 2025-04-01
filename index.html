@@ -1,85 +1,83 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>CosmoRise Game</title>
+    <title>CosmoRise</title>
     <meta charset="UTF-8">
-    <!-- Подключаем стиль Telegram -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         body {
             font-family: Arial, sans-serif;
-            text-align: center;
-            background-color: #0e0e1a;
+            background: #0f0c29;
             color: white;
+            text-align: center;
             padding: 20px;
         }
         button {
-            background: #4a6bff;
+            background: #4a00e0;
             color: white;
             border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
+            padding: 12px 24px;
+            margin: 10px;
+            border-radius: 8px;
             font-size: 16px;
             cursor: pointer;
-            margin: 10px;
         }
-        #energy {
-            font-weight: bold;
-            color: #4affa1;
+        #stats {
+            background: rgba(0,0,0,0.5);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
         }
     </style>
 </head>
 <body>
-    <h1>🌌 CosmoRise</h1>
-    <p>Ты на планете: <span id="planet">Земля</span></p>
-    <p>Энергия: <span id="energy">100</span> ⚡</p>
-    
+    <div id="stats">
+        <h1>🌠 CosmoRise</h1>
+        <p>Планета: <span id="planet">Земля</span></p>
+        <p>Энергия: <span id="energy">100</span> ⚡</p>
+    </div>
+
     <button onclick="mineEnergy()">Добыть энергию</button>
-    <button onclick="travel()">Полетели!</button>
+    <button onclick="saveAndExit()">Сохранить и выйти</button>
 
     <script>
-        // Здесь будет логика игры
+        // Игровые переменные
         let energy = 100;
         let currentPlanet = "Земля";
 
+        // Инициализация WebApp
+        Telegram.WebApp.ready();
+        Telegram.WebApp.expand(); // Раскрываем на весь экран
+
+        // Загрузка сохранённых данных из бота
+        if (Telegram.WebApp.initDataUnsafe.start_param) {
+            const savedData = JSON.parse(Telegram.WebApp.initDataUnsafe.start_param);
+            energy = savedData.energy || 100;
+            currentPlanet = savedData.planet || "Земля";
+            updateUI();
+        }
+
+        // Функции игры
         function mineEnergy() {
             energy += 10;
-            document.getElementById("energy").innerText = energy;
+            updateUI();
         }
 
-        function travel() {
-            alert(`🚀 Вы летите с ${currentPlanet} на новую планету!`);
+        function updateUI() {
+            document.getElementById("energy").textContent = energy;
+            document.getElementById("planet").textContent = currentPlanet;
         }
 
-        // Проверяем, что WebApp инициализирован
-if (window.Telegram && Telegram.WebApp) {
-    // Данные, которые будем отправлять боту
-    const gameData = {
-        energy: energy,
-        planet: currentPlanet,
-        userId: Telegram.WebApp.initDataUnsafe.user?.id || "unknown"
-    };
-
-    // 1. Отправляем данные при закрытии игры
-    Telegram.WebApp.onEvent('viewportChanged', () => {
-        if (Telegram.WebApp.isExpanded) {
+        function saveAndExit() {
+            const gameData = {
+                energy: energy,
+                planet: currentPlanet,
+                userId: Telegram.WebApp.initDataUnsafe.user?.id
+            };
             Telegram.WebApp.sendData(JSON.stringify(gameData));
+            Telegram.WebApp.close();
         }
-    });
-
-    // 2. Кнопка "Сохранить и выйти"
-    document.getElementById('save-btn').addEventListener('click', () => {
-        Telegram.WebApp.sendData(JSON.stringify(gameData));
-        Telegram.WebApp.close();
-    });
-
-    // 3. Загружаем данные из бота (если есть)
-    if (Telegram.WebApp.initDataUnsafe.start_param) {
-        const savedData = JSON.parse(Telegram.WebApp.initDataUnsafe.start_param);
-        energy = savedData.energy || 100;
-        document.getElementById('energy').innerText = energy;
-    }
-}
     </script>
 </body>
 </html>
