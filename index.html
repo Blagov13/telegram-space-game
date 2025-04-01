@@ -48,14 +48,21 @@
 
         // Инициализация WebApp
         Telegram.WebApp.ready();
-        Telegram.WebApp.expand(); // Раскрываем на весь экран
+        Telegram.WebApp.expand();
 
-        // Загрузка сохранённых данных из бота
-        if (Telegram.WebApp.initDataUnsafe.start_param) {
-            const savedData = JSON.parse(Telegram.WebApp.initDataUnsafe.start_param);
-            energy = savedData.energy || 100;
-            currentPlanet = savedData.planet || "Земля";
-            updateUI();
+        // Проверяем параметры URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const startParam = urlParams.get('start_param');
+        
+        if (startParam) {
+            try {
+                const savedData = JSON.parse(startParam);
+                energy = savedData.energy || 100;
+                currentPlanet = savedData.planet || "Земля";
+                updateUI();
+            } catch (e) {
+                console.error("Ошибка загрузки данных:", e);
+            }
         }
 
         // Функции игры
