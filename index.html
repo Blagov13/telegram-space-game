@@ -5,18 +5,61 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>CosmoRise</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script src="https://kit.fontawesome.com/a076d05399.js"></script> <!-- Подключаем Font Awesome -->
+    <script src="https://kit.fontawesome.com/a076d05399.js"></script>
     <style>
+        :root {
+            --mouse-x: 50%;
+            --mouse-y: 50%;
+        }
+
         body {
-            background-image: url('https://github.com/Blagov13/telegram-space-game/blob/main/ChatGPT%20Image%201%20апр.%202025%20г.,%2017_11_17.png?raw=true');
-            background-size: cover;
-            background-position: center;
             margin: 0;
             padding: 0;
             height: 100vh;
             font-family: 'Arial', sans-serif;
             color: white;
-            overflow: hidden; /* Запрещаем прокрутку страницы */
+            overflow: hidden;
+            position: relative;
+        }
+
+        .parallax-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -2;
+            background-image: url('https://github.com/Blagov13/telegram-space-game/blob/main/ChatGPT%20Image%201%20апр.%202025%20г.,%2017_11_17.png?raw=true');
+            background-size: cover;
+            background-position: center;
+            will-change: transform;
+            transition: background-image 1.5s ease-in-out;
+        }
+
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(
+                circle at var(--mouse-x) var(--mouse-y),
+                rgba(255,255,255,0.1) 0%,
+                transparent 50%
+            );
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        #particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            pointer-events: none;
         }
 
         #stats {
@@ -27,12 +70,15 @@
             margin: 20px auto;
             text-align: center;
             font-size: 18px;
-            animation: fadeIn 1s ease-in-out; /* Анимация появления */
+            animation: fadeIn 1s ease-in-out;
+            backdrop-filter: blur(5px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
         h1 {
             font-size: 28px;
             margin-bottom: 15px;
+            text-shadow: 0 0 10px rgba(142, 45, 226, 0.7);
         }
 
         p {
@@ -54,19 +100,40 @@
             font-size: 18px;
             cursor: pointer;
             width: 100%;
-            transition: background 0.3s ease, transform 0.3s ease;
+            transition: all 0.3s ease;
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 4px 15px rgba(74, 0, 224, 0.4);
+            position: relative;
+            overflow: hidden;
         }
 
         button:hover {
             background: linear-gradient(90deg, #8e2de2, #4a00e0);
-            transform: scale(1.05); /* Легкое увеличение при наведении */
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(74, 0, 224, 0.6);
         }
 
         button:active {
-            transform: scale(0.98);
+            transform: translateY(1px);
+        }
+
+        button::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: rgba(255, 255, 255, 0.1);
+            transform: rotate(45deg);
+            transition: all 0.5s ease;
+            pointer-events: none;
+        }
+
+        button:hover::after {
+            left: 100%;
         }
 
         .button-text {
@@ -77,6 +144,7 @@
         .button-container {
             max-width: 400px;
             margin: 0 auto;
+            padding: 0 20px;
         }
 
         .action-buttons {
@@ -85,45 +153,130 @@
             gap: 10px;
         }
 
-        .action-buttons button {
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        .progress-container {
+            width: 100%;
+            height: 5px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 3px;
+            margin: 10px 0;
         }
 
-        .action-buttons button:hover {
-            transform: translateY(-5px);
-            box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.3);
+        .progress-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #4a00e0, #8e2de2);
+            border-radius: 3px;
+            transition: width 0.5s ease;
+        }
+
+        #customAlert {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .alert-content {
+            background: linear-gradient(135deg, #1e0033, #3a0068);
+            padding: 30px;
+            border-radius: 15px;
+            width: 80%;
+            max-width: 400px;
+            text-align: center;
+            border: 2px solid #8e2de2;
+            box-shadow: 0 0 20px rgba(142, 45, 226, 0.5);
+            animation: alertFadeIn 0.3s ease-out;
+        }
+
+        .alert-content button {
+            margin-top: 20px;
+        }
+
+        #achievementToast {
+            position: fixed;
+            top: 20px;
+            right: -400px;
+            background: rgba(0,0,0,0.8);
+            border-left: 5px solid #FFD700;
+            padding: 15px;
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            transition: right 0.5s ease;
+            z-index: 100;
+        }
+
+        .achievement-icon {
+            font-size: 24px;
+            margin-right: 10px;
+            color: #FFD700;
+        }
+
+        .achievement-text {
+            flex-grow: 1;
+        }
+
+        .achievement-title {
+            font-weight: bold;
+            color: #FFD700;
         }
 
         @keyframes fadeIn {
-            0% { opacity: 0; }
-            100% { opacity: 1; }
+            0% { opacity: 0; transform: translateY(20px); }
+            100% { opacity: 1; transform: translateY(0); }
         }
 
-        /* Анимация для кнопок */
-        .animate-button {
-            animation: bounce 1s ease infinite;
+        @keyframes alertFadeIn {
+            0% { opacity: 0; transform: scale(0.9); }
+            100% { opacity: 1; transform: scale(1); }
         }
 
         @keyframes bounce {
-            0%, 20%, 50%, 80%, 100% {
-                transform: translateY(0);
-            }
-            40% {
-                transform: translateY(-10px);
-            }
-            60% {
-                transform: translateY(-5px);
-            }
+            0%, 20%, 50%, 80%, 100% { transform: translateY(0); }
+            40% { transform: translateY(-10px); }
+            60% { transform: translateY(-5px); }
         }
 
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .animate-button {
+            animation: float 3s ease-in-out infinite;
+        }
+
+        .animate-button:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+
+        .animate-button:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+
+        .animate-button:nth-child(4) {
+            animation-delay: 0.6s;
+        }
     </style>
 </head>
 <body>
+    <div class="parallax-bg" id="parallaxBg"></div>
+    <canvas id="particles"></canvas>
+
     <div id="stats">
         <h1>🌌 CosmoRise</h1>
         <p>🪐 Планета: <span id="planet">Земля</span></p>
         <p>⚡ Энергия: <span id="energy">100</span></p>
         <p>📈 Уровень: <span id="level">1</span></p>
+        <div class="progress-container">
+            <div class="progress-bar" id="upgradeProgress"></div>
+        </div>
     </div>
 
     <div class="button-container">
@@ -147,7 +300,23 @@
         </div>
     </div>
 
+    <div id="customAlert">
+        <div class="alert-content">
+            <p id="alertMessage"></p>
+            <button onclick="hideAlert()">OK</button>
+        </div>
+    </div>
+
+    <div id="achievementToast">
+        <div class="achievement-icon">🏆</div>
+        <div class="achievement-text">
+            <div class="achievement-title">Достижение!</div>
+            <div id="achievementMessage"></div>
+        </div>
+    </div>
+
     <script>
+        // Игровые переменные
         let energy = 100;
         let currentPlanet = "Земля";
         let level = 1;
@@ -155,13 +324,22 @@
         let unlockedPlanets = ["Земля"];
         let upgradeCost = 50;
         let newPlanetCost = 200;
+        const planetBackgrounds = {
+            "Земля": "url('https://github.com/Blagov13/telegram-space-game/blob/main/ChatGPT%20Image%201%20апр.%202025%20г.,%2017_11_17.png?raw=true')",
+            "Марс": "url('https://images.unsplash.com/photo-1454789548928-9efd52dc4031?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80')",
+            "Юпитер": "url('https://images.unsplash.com/photo-1614314107760-d40b9f9e6996?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80')",
+            "Сатурн": "url('https://images.unsplash.com/photo-1614314107760-d40b9f9e6996?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80')",
+            "Плутон": "url('https://images.unsplash.com/photo-1614314107760-d40b9f9e6996?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80')"
+        };
 
+        // Инициализация игры
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
 
+        // Загрузка сохранённых данных
         const urlParams = new URLSearchParams(window.location.search);
         const startParam = urlParams.get('start_param');
-
+        
         if (startParam) {
             try {
                 const savedData = JSON.parse(decodeURIComponent(startParam));
@@ -174,40 +352,140 @@
             }
         }
 
+        // Параллакс эффект
+        document.addEventListener('mousemove', (e) => {
+            const x = e.clientX / window.innerWidth;
+            const y = e.clientY / window.innerHeight;
+            document.documentElement.style.setProperty('--mouse-x', `${e.clientX}px`);
+            document.documentElement.style.setProperty('--mouse-y', `${e.clientY}px`);
+            document.getElementById('parallaxBg').style.transform = 
+                `translate(${x * 20}px, ${y * 20}px)`;
+        });
+
+        // Частицы космической пыли
+        const canvas = document.getElementById('particles');
+        const ctx = canvas.getContext('2d');
+        canvas.width = window.innerWidth;
+        canvas.height = window.innerHeight;
+
+        const particles = [];
+        for (let i = 0; i < 150; i++) {
+            particles.push({
+                x: Math.random() * canvas.width,
+                y: Math.random() * canvas.height,
+                size: Math.random() * 2 + 0.5,
+                speed: Math.random() * 0.5 + 0.1,
+                opacity: Math.random() * 0.5 + 0.1
+            });
+        }
+
+        function animateParticles() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.8)';
+            
+            particles.forEach(p => {
+                ctx.globalAlpha = p.opacity;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+                
+                p.y += p.speed;
+                if (p.y > canvas.height) {
+                    p.y = 0;
+                    p.x = Math.random() * canvas.width;
+                }
+            });
+            
+            requestAnimationFrame(animateParticles);
+        }
+
+        animateParticles();
+
+        // Игровые функции
         function mineEnergy() {
+            animateButton(event.target);
             energy += energyPerClick;
+            
+            // Эффект частицы
+            const particle = document.createElement('div');
+            particle.style.position = 'absolute';
+            particle.style.left = `${Math.random() * 80 + 10}%`;
+            particle.style.top = '80%';
+            particle.style.fontSize = '24px';
+            particle.style.color = '#FFD700';
+            particle.style.opacity = '1';
+            particle.style.transition = 'all 1s';
+            particle.style.pointerEvents = 'none';
+            particle.style.zIndex = '100';
+            particle.textContent = `+${energyPerClick} ⚡`;
+            document.body.appendChild(particle);
+            
+            setTimeout(() => {
+                particle.style.top = '60%';
+                particle.style.opacity = '0';
+                setTimeout(() => particle.remove(), 1000);
+            }, 10);
+            
             updateUI();
         }
 
         function buyUpgrade() {
             if (energy >= upgradeCost) {
+                animateButton(event.target);
                 energy -= upgradeCost;
                 energyPerClick += 5;
                 upgradeCost = Math.round(upgradeCost * 1.5);
                 level++;
+                
+                // Проверка достижений
+                if (energyPerClick >= 30) {
+                    showAchievement("Мастер добычи", "Уровень добычи 30+");
+                }
+                
                 updateUI();
             } else {
-                alert("Недостаточно энергии!");
+                showAlert("Недостаточно энергии!");
+                const energyText = document.getElementById('energy');
+                energyText.style.animation = 'shake 0.5s';
+                setTimeout(() => energyText.style.animation = '', 500);
             }
         }
 
         function travelToNewPlanet() {
             if (energy >= newPlanetCost) {
-                energy -= newPlanetCost;
-                const planets = ["Марс", "Юпитер", "Сатурн", "Плутон"];
-                const nextPlanetIndex = unlockedPlanets.length;
+                animateButton(event.target);
+                
+                // Анимация перехода
+                document.body.style.opacity = '0.7';
+                
+                setTimeout(() => {
+                    energy -= newPlanetCost;
+                    const planets = ["Марс", "Юпитер", "Сатурн", "Плутон"];
+                    const nextPlanetIndex = unlockedPlanets.length;
 
-                if (nextPlanetIndex < planets.length) {
-                    currentPlanet = planets[nextPlanetIndex];
-                    unlockedPlanets.push(currentPlanet);
-                    newPlanetCost = Math.round(newPlanetCost * 2);
-                    level++;
-                    updateUI();
-                } else {
-                    alert("Все планеты открыты!");
-                }
+                    if (nextPlanetIndex < planets.length) {
+                        currentPlanet = planets[nextPlanetIndex];
+                        unlockedPlanets.push(currentPlanet);
+                        newPlanetCost = Math.round(newPlanetCost * 2);
+                        level++;
+                        
+                        // Меняем фон
+                        if (planetBackgrounds[currentPlanet]) {
+                            document.getElementById('parallaxBg').style.backgroundImage = planetBackgrounds[currentPlanet];
+                        }
+                        
+                        // Достижение за новую планету
+                        showAchievement(`Покоритель ${currentPlanet}`, `Открыта планета ${currentPlanet}`);
+                        
+                        updateUI();
+                        document.body.style.opacity = '1';
+                    } else {
+                        showAlert("Все планеты открыты!");
+                        document.body.style.opacity = '1';
+                    }
+                }, 800);
             } else {
-                alert("Недостаточно энергии!");
+                showAlert("Недостаточно энергии для путешествия!");
             }
         }
 
@@ -217,12 +495,61 @@
             document.getElementById("level").textContent = level;
             document.getElementById("upgradeCost").textContent = upgradeCost;
             document.getElementById("newPlanetCost").textContent = newPlanetCost;
+            
+            // Обновляем прогресс-бар
+            const progress = (energy / upgradeCost) * 100;
+            document.getElementById('upgradeProgress').style.width = `${Math.min(100, progress)}%`;
         }
 
         function saveAndExit() {
-            Telegram.WebApp.sendData(JSON.stringify({ energy, planet: currentPlanet, level }));
+            animateButton(event.target);
+            Telegram.WebApp.sendData(JSON.stringify({ 
+                energy, 
+                planet: currentPlanet, 
+                level 
+            }));
             setTimeout(() => Telegram.WebApp.close(), 500);
         }
+
+        // Вспомогательные функции
+        function animateButton(button) {
+            button.style.transform = 'scale(0.95)';
+            button.style.boxShadow = '0 2px 5px rgba(0,0,0,0.2)';
+            
+            setTimeout(() => {
+                button.style.transform = '';
+                button.style.boxShadow = '';
+            }, 200);
+        }
+
+        function showAlert(message) {
+            document.getElementById('alertMessage').textContent = message;
+            document.getElementById('customAlert').style.display = 'flex';
+        }
+
+        function hideAlert() {
+            document.getElementById('customAlert').style.display = 'none';
+        }
+
+        function showAchievement(title, message) {
+            const toast = document.getElementById('achievementToast');
+            document.getElementById('achievementMessage').textContent = message;
+            
+            toast.style.right = '20px';
+            setTimeout(() => {
+                toast.style.right = '-400px';
+            }, 3000);
+        }
+
+        // Реактивные кнопки
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('mousedown', () => {
+                btn.style.transform = 'translateY(2px)';
+            });
+            btn.addEventListener('mouseup', () => {
+                btn.style.transform = '';
+            });
+        });
     </script>
 </body>
 </html>
