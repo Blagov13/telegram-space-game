@@ -23,7 +23,6 @@
             border-radius: 8px;
             font-size: 16px;
             cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
         #stats {
             background: rgba(0,0,0,0.7);
@@ -31,27 +30,22 @@
             border-radius: 15px;
             margin-bottom: 20px;
         }
-        .planet-icon {
-            font-size: 24px;
-            vertical-align: middle;
-        }
     </style>
 </head>
 <body>
     <div id="stats">
         <h1>🌌 CosmoRise</h1>
-        <p><span class="planet-icon">🪐</span> Планета: <span id="planet">Земля</span></p>
-        <p><span class="planet-icon">⚡</span> Энергия: <span id="energy">100</span></p>
-        <p><span class="planet-icon">📊</span> Уровень: <span id="level">1</span></p>
+        <p>🪐 Планета: <span id="planet">Земля</span></p>
+        <p>⚡ Энергия: <span id="energy">100</span></p>
+        <p>📈 Уровень: <span id="level">1</span></p>
     </div>
 
     <button onclick="mineEnergy()">Добыть энергию</button>
-    <button onclick="buyUpgrade()">Улучшить добычу (50 ⚡)</button>
-    <button onclick="travelToNewPlanet()">Открыть новую планету (200 ⚡)</button>
+    <button onclick="buyUpgrade()">Улучшить добычу (<span id="upgradeCost">50</span> ⚡)</button>
+    <button onclick="travelToNewPlanet()">Открыть новую планету (<span id="newPlanetCost">200</span> ⚡)</button>
     <button onclick="saveAndExit()">💾 Сохранить и выйти</button>
 
     <script>
-        // Игровые переменные
         let energy = 100;
         let currentPlanet = "Земля";
         let level = 1;
@@ -60,17 +54,15 @@
         let upgradeCost = 50;
         let newPlanetCost = 200;
 
-        // Инициализация WebApp
         Telegram.WebApp.ready();
         Telegram.WebApp.expand();
 
-        // Загрузка сохранённых данных
         const urlParams = new URLSearchParams(window.location.search);
         const startParam = urlParams.get('start_param');
-        
+
         if (startParam) {
             try {
-                const savedData = JSON.parse(startParam);
+                const savedData = JSON.parse(decodeURIComponent(startParam));
                 energy = savedData.energy || 100;
                 currentPlanet = savedData.planet || "Земля";
                 level = savedData.level || 1;
@@ -80,7 +72,6 @@
             }
         }
 
-        // Функции игры
         function mineEnergy() {
             energy += energyPerClick;
             updateUI();
@@ -93,7 +84,6 @@
                 upgradeCost = Math.round(upgradeCost * 1.5);
                 level++;
                 updateUI();
-                alert(`⚡ Улучшено! Теперь получаете +${energyPerClick} энергии за клик`);
             } else {
                 alert("Недостаточно энергии!");
             }
@@ -103,15 +93,19 @@
             if (energy >= newPlanetCost) {
                 energy -= newPlanetCost;
                 const planets = ["Марс", "Юпитер", "Сатурн", "Плутон"];
-                const newPlanet = planets[unlockedPlanets.length - 1];
-                unlockedPlanets.push(newPlanet);
-                currentPlanet = newPlanet;
-                newPlanetCost = Math.round(newPlanetCost * 2);
-                level++;
-                updateUI();
-                alert(`🚀 Вы открыли планету ${newPlanet}!`);
+                const nextPlanetIndex = unlockedPlanets.length;
+
+                if (nextPlanetIndex < planets.length) {
+                    currentPlanet = planets[nextPlanetIndex];
+                    unlockedPlanets.push(currentPlanet);
+                    newPlanetCost = Math.round(newPlanetCost * 2);
+                    level++;
+                    updateUI();
+                } else {
+                    alert("Все планеты открыты!");
+                }
             } else {
-                alert("Недостаточно энергии для путешествия!");
+                alert("Недостаточно энергии!");
             }
         }
 
@@ -119,18 +113,15 @@
             document.getElementById("energy").textContent = energy;
             document.getElementById("planet").textContent = currentPlanet;
             document.getElementById("level").textContent = level;
+            document.getElementById("upgradeCost").textContent = upgradeCost;
+            document.getElementById("newPlanetCost").textContent = newPlanetCost;
         }
 
         function saveAndExit() {
-            const gameData = {
-                energy: energy,
-                planet: currentPlanet,
-                level: level,
-                userId: Telegram.WebApp.initDataUnsafe.user?.id
-            };
-            Telegram.WebApp.sendData(JSON.stringify(gameData));
-            Telegram.WebApp.close();
+            Telegram.WebApp.sendData(JSON.stringify({ energy, planet: currentPlanet, level }));
+            setTimeout(() => Telegram.WebApp.close(), 500);
         }
     </script>
 </body>
 </html>
+
