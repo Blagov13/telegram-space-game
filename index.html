@@ -50,6 +50,14 @@
         function travel() {
             alert(`🚀 Вы летите с ${currentPlanet} на новую планету!`);
         }
+
+        // Отправляем данные боту при закрытии игры
+        Telegram.WebApp.onEvent('viewportChanged', () => {
+        Telegram.WebApp.sendData(JSON.stringify({ 
+        energy: energy,
+        planet: currentPlanet 
+        }));
+        });
     </script>
 </body>
 </html>
